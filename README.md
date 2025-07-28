@@ -4,29 +4,8 @@ Export complete Figma text styles to TailwindCSS v4 with all properties includin
 ![Figma Text Styles to TailwindCSS](docs/images/plugin-hero.png)
 
 
-## Installation
-
-### Figma Community (In Review)
-Use [Export Text Styles for TailwindCSS v4](https://www.figma.com/community/plugin/1531407977615884339/export-text-styles-for-tailwindcss-v4) plugin directly from Figma - *Currently in review*
-
-### Load Plugin Locally (Available Now)
-
-**Step 1: Download the plugin**
-
-Clone the repo or download the ZIP (easier for designers)
-1. Click the green "Code" button above → "Download ZIP"
-2. Unzip the file to your Desktop (or wherever you'll remember)
-
-**Step 2: Load in Figma Desktop**
-
-1. Open **Figma Desktop** (required for local plugins)
-2. Go to `Plugins` → `Development` → `Import plugin from manifest...`
-3. Navigate to your downloaded folder and select `manifest.json`
-
-![Installation Step 1](docs/images/install-step-1.png)
-
-**Step 3: Run the plugin**
-Use the plugin like any other plugin
+## Using the plugin
+Use [Export Text Styles for TailwindCSS v4](https://www.figma.com/community/plugin/1531407977615884339/export-text-styles-for-tailwindcss-v4) plugin directly from Figma
 
 ## Usage
 
