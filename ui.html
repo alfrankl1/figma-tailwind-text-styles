@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* Fallback colors for when Figma tokens aren't available */
+    :root {
+      --fallback-bg: #ffffff;
+      --fallback-bg-secondary: #f8f9fa;
+      --fallback-bg-tertiary: #f1f3f4;
+      --fallback-text: #1a1a1a;
+      --fallback-text-secondary: #6b7280;
+      --fallback-border: #e5e7eb;
+      --fallback-brand: #0066cc;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fallback-bg: #2c2c2c;
+        --fallback-bg-secondary: #1e1e1e;
+        --fallback-bg-tertiary: #151515;
+        --fallback-text: #ffffff;
+        --fallback-text-secondary: #9ca3af;
+        --fallback-border: #404040;
+        --fallback-brand: #4f9aff;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--figma-color-bg, var(--fallback-bg));
+      color: var(--figma-color-text, var(--fallback-text));
+      height: 100vh;
+      display: flex;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .config-panel {
+      width: 280px;
+      background: var(--figma-color-bg-secondary, var(--fallback-bg-secondary));
+      padding: 24px;
+      border-right: 1px solid var(--figma-color-border, var(--fallback-border));
+      overflow-y: auto;
+    }
+    
+    .preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .preview-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .action-buttons {
+      padding: 20px;
+      border-top: 1px solid var(--figma-color-border, var(--fallback-border));
+      display: flex;
+      gap: 12px;
+    }
+    
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--figma-color-text, var(--fallback-text));
+      letter-spacing: -0.01em;
+    }
+    
+    .config-group {
+      margin-bottom: 20px;
+    }
+    
+    .config-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--figma-color-text, var(--fallback-text));
+      margin-bottom: 8px;
+      display: block;
+      letter-spacing: -0.005em;
+    }
+    
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .toggle input[type="checkbox"] {
+      position: relative;
+      width: 22px;
+      height: 12px;
+      appearance: none;
+      background: var(--figma-color-border, var(--fallback-border));
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .toggle input[type="checkbox"]:checked {
+      background: var(--figma-color-bg-brand, var(--fallback-brand));
+    }
+    
+    .toggle input[type="checkbox"]:before {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 10px;
+      height: 10px;
+      background: var(--figma-color-bg, white);
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .toggle input[type="checkbox"]:checked:before {
+      transform: translateX(10px);
+    }
+    
+    .toggle label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--figma-color-text, var(--fallback-text));
+      cursor: pointer;
+    }
+    
+    .config-description {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      padding-left: 0px;
+    }
+    
+    .config-description span {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary, var(--fallback-text-secondary));
+      line-height: 1.4;
+    }
+
+    .status {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--figma-color-text-brand, var(--fallback-brand));
+      margin-bottom: 16px;
+      padding: 6px 10px;
+      background: var(--figma-color-bg-brand-secondary, var(--fallback-bg-tertiary));
+      border-radius: 4px;
+      border: 1px solid var(--figma-color-border-brand, var(--fallback-border));
+    }
+
+    .preview-code {
+      background: var(--figma-color-bg-tertiary, var(--fallback-bg-tertiary));
+      border: 1px solid var(--figma-color-border, var(--fallback-border));
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--figma-color-text, var(--fallback-text));
+      white-space: pre-wrap;
+      min-height: 300px;
+      overflow-x: auto;
+    }
+
+    /* CSS Syntax Highlighting */
+    .css-comment { color: #6a9955; font-style: italic; }
+    .css-selector { color: #d4d4aa; font-weight: 600; }
+    .css-property { color: #92c5f7; }
+    .css-value { color: #ce9178; }
+    .css-at-rule { color: #c586c0; font-weight: 600; }
+    .css-brace { color: #d4d4d4; }
+
+    @media (prefers-color-scheme: light) {
+      .css-comment { color: #008000; }
+      .css-selector { color: #800000; font-weight: 600; }
+      .css-property { color: #ff0000; }
+      .css-value { color: #0451a5; }
+      .css-at-rule { color: #800080; font-weight: 600; }
+      .css-brace { color: #000000; }
+    }
+    
+    .action-button {
+      flex: 1;
+      height: 32px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: var(--figma-color-bg-brand, var(--fallback-brand));
+      color: var(--figma-color-text-onbrand, white);
+    }
+    
+    .copy-button:hover,
+    .save-button:hover {
+      background: var(--figma-color-bg-brand-hover, var(--fallback-brand));
+      filter: brightness(0.9);
+    }
+    
+    .error {
+      color: var(--figma-color-text-danger, #ef4444);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    
+    .docs-link {
+      color: var(--figma-color-text-brand, var(--fallback-brand));
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    
+    .docs-link:hover {
+      text-decoration: underline;
+    }
+    
+    input[type="number"] {
+      width: 100%;
+      height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--figma-color-border, var(--fallback-border));
+      border-radius: 4px;
+      background: var(--figma-color-bg, var(--fallback-bg));
+      color: var(--figma-color-text, var(--fallback-text));
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--figma-color-bg-brand, var(--fallback-brand));
+      box-shadow: 0 0 0 1px var(--figma-color-bg-brand, var(--fallback-brand));
+    }
+    
+    .input-with-unit {
+      position: relative;
+      margin-bottom: 6px;
+    }
+    
+    .input-with-unit input[type="text"] {
+      width: 100%;
+      height: 28px;
+      padding: 0 35px 0 8px;
+      border: 1px solid var(--figma-color-border, var(--fallback-border));
+      border-radius: 4px;
+      background: var(--figma-color-bg, var(--fallback-bg));
+      color: var(--figma-color-text, var(--fallback-text));
+      font-size: 11px;
+    }
+    
+    .input-with-unit input[type="text"]:focus {
+      outline: none;
+      border-color: var(--figma-color-bg-brand, var(--fallback-brand));
+      box-shadow: 0 0 0 1px var(--figma-color-bg-brand, var(--fallback-brand));
+    }
+    
+    .input-unit {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--figma-color-text-secondary, var(--fallback-text-secondary));
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="config-panel">
+      <h2>Configuration</h2>
+      
+      <div class="config-group">
+        <div id="status" class="status">Extracting text styles...</div>
+      </div>
+      
+      <div class="config-group">
+        <label class="config-label">Output Options</label>
+        <div class="toggle">
+          <input type="checkbox" id="includeTheme" checked>
+          <label for="includeTheme">Include @theme section</label>
+        </div>
+        <div class="config-description">
+          <span>Adds custom font variables and base font size overrides to your CSS theme. You will need to import the fonts manually - see <a href="https://tailwindcss.com/docs/font-family" target="_blank" class="docs-link">Font Import Guide</a></span>
+        </div>
+      </div>
+      
+      <div class="config-group">
+        <div class="toggle">
+          <input type="checkbox" id="alwaysUseTailwind" checked>
+          <label for="alwaysUseTailwind">Always use Tailwind values</label>
+        </div>
+        <div class="config-description">
+          <span>When on, uses the closest Tailwind class even if not exact. When off, uses exact CSS values if no close match found.</span>
+        </div>
+      </div>
+      
+      <div class="config-group">
+        <label class="config-label">Base Font Size</label>
+        <div class="input-with-unit">
+          <input type="text" id="baseFontSize" value="16" placeholder="16">
+          <span class="input-unit">px</span>
+        </div>
+        <div class="config-description">
+          <span>Set this to match your body font size - if your base text isn't 16px, change this value.</span>
+        </div>
+      </div>
+      
+      <div class="config-group">
+        <label class="config-label">Close Match Tolerances</label>
+        <div class="config-description">
+          <span>
+            <ul>
+              <li>Size: ±1px (e.g. 15px → text-base at 16px)</li>
+              <li>Line height: ±2px spacing / ±0.05 ratios</li>
+              <li>Letter Spacing: ±0.005em</li>
+              <li>Weight: ±50 units (e.g. 550 → 500)</li>
+            </ul>
+          </span>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="preview-area">
+      <div class="preview-content">
+        <h2>Generated CSS</h2>
+        <div id="preview" class="preview-code">
+          <span class="css-comment">/* Extracting text styles... */</span><br>
+          <span class="css-comment">/* Generated CSS will appear here */</span>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button id="copyButton" class="action-button copy-button">Copy to Clipboard</button>
+        <button id="saveButton" class="action-button save-button">Save as globals.css</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tailwind v4 mapping tables (bundled)
+    const tailwindFontSizes = [
+      { class: 'text-xs', px: 12 },
+      { class: 'text-sm', px: 14 },
+      { class: 'text-base', px: 16 },
+      { class: 'text-lg', px: 18 },
+      { class: 'text-xl', px: 20 },
+      { class: 'text-2xl', px: 24 },
+      { class: 'text-3xl', px: 30 },
+      { class: 'text-4xl', px: 36 },
+      { class: 'text-5xl', px: 48 },
+      { class: 'text-6xl', px: 60 },
+      { class: 'text-7xl', px: 72 },
+      { class: 'text-8xl', px: 96 },
+      { class: 'text-9xl', px: 128 },
+    ];
+
+    const tailwindFontWeights = [
+      { class: 'font-thin', weight: 100 },
+      { class: 'font-extralight', weight: 200 },
+      { class: 'font-light', weight: 300 },
+      { class: 'font-normal', weight: 400 },
+      { class: 'font-medium', weight: 500 },
+      { class: 'font-semibold', weight: 600 },
+      { class: 'font-bold', weight: 700 },
+      { class: 'font-extrabold', weight: 800 },
+      { class: 'font-black', weight: 900 },
+    ];
+
+    const tailwindLetterSpacing = [
+      { class: 'tracking-tighter', em: -0.05 },
+      { class: 'tracking-tight', em: -0.025 },
+      { class: 'tracking-normal', em: 0 },
+      { class: 'tracking-wide', em: 0.025 },
+      { class: 'tracking-wider', em: 0.05 },
+      { class: 'tracking-widest', em: 0.1 },
+    ];
+
+    const tailwindLineHeights = [
+      { class: 'leading-none', ratio: 1 },
+      { class: 'leading-tight', ratio: 1.25 },
+      { class: 'leading-snug', ratio: 1.375 },
+      { class: 'leading-normal', ratio: 1.5 },
+      { class: 'leading-relaxed', ratio: 1.625 },
+      { class: 'leading-loose', ratio: 2 },
+    ];
+
+    // Tailwind v4 spacing-based line heights (preferred)
+    const spacingLineHeights = [
+      { class: 'leading-3', px: 12 },    // 0.75rem
+      { class: 'leading-4', px: 16 },    // 1rem
+      { class: 'leading-5', px: 20 },    // 1.25rem
+      { class: 'leading-6', px: 24 },    // 1.5rem
+      { class: 'leading-7', px: 28 },    // 1.75rem
+      { class: 'leading-8', px: 32 },    // 2rem
+      { class: 'leading-9', px: 36 },    // 2.25rem
+      { class: 'leading-10', px: 40 },   // 2.5rem
+      { class: 'leading-none', px: null, ratio: 1 }, // Special case
+    ];
+
+    const styleNameToWeight = {
+      'Thin': 100, 'ExtraLight': 200, 'Light': 300, 'Regular': 400, 'Normal': 400,
+      'Medium': 500, 'SemiBold': 600, 'Semi Bold': 600, 'Bold': 700, 
+      'ExtraBold': 800, 'Extra Bold': 800, 'Black': 900, 'Heavy': 900
+    };
+
+    const systemFonts = {
+      'Arial': 'font-sans',
+      'Helvetica': 'font-sans', 
+      'Helvetica Neue': 'font-sans',
+      'Times': 'font-serif',
+      'Times New Roman': 'font-serif',
+      'Georgia': 'font-serif',
+      'Courier': 'font-mono',
+      'Courier New': 'font-mono',
+      'Monaco': 'font-mono'
+    };
+
+    let extractedStyles = [];
+    let generatedCSS = '';
+
+    // DOM elements
+    const status = document.getElementById('status');
+    const preview = document.getElementById('preview');
+    const copyButton = document.getElementById('copyButton');
+    const saveButton = document.getElementById('saveButton');
+    const includeThemeCheckbox = document.getElementById('includeTheme');
+    const alwaysUseTailwindCheckbox = document.getElementById('alwaysUseTailwind');
+    const baseFontSizeInput = document.getElementById('baseFontSize');
+
+    // Event listeners
+    copyButton.addEventListener('click', copyToClipboard);
+    saveButton.addEventListener('click', saveFile);
+    includeThemeCheckbox.addEventListener('change', regenerateCSS);
+    alwaysUseTailwindCheckbox.addEventListener('change', regenerateCSS);
+    baseFontSizeInput.addEventListener('input', regenerateCSS);
+
+    // Helper function to parse base font size from input (px only)
+    function parseBaseFontSize(input) {
+      const value = input.trim();
+      
+      // Remove 'px' if present and parse as number
+      const numValue = parseFloat(value.replace('px', ''));
+      return isNaN(numValue) ? 16 : numValue;
+    }
+
+    // Auto-extract styles when plugin loads
+    window.addEventListener('load', () => {
+      setTimeout(extractStyles, 100); // Small delay to ensure UI is ready
+    });
+
+    // Plugin communication
+    onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      
+      if (msg.type === 'styles-extracted') {
+        extractedStyles = msg.styles;
+        if (msg.styles.length === 0) {
+          status.textContent = 'No text styles found in this file';
+          status.style.color = 'var(--figma-color-text-secondary)';
+        } else {
+          status.textContent = `Extracted ${msg.styles.length} text style${msg.styles.length === 1 ? '' : 's'}`;
+        }
+        generateCSS();
+      } else if (msg.type === 'error') {
+        status.textContent = `Error: ${msg.message}`;
+        status.className = 'status error';
+      }
+    };
+
+    function extractStyles() {
+      status.textContent = 'Extracting text styles...';
+      parent.postMessage({ pluginMessage: { type: 'extract-styles' } }, '*');
+    }
+
+    function generateCSS() {
+      const includeTheme = includeThemeCheckbox.checked;
+      const alwaysUseTailwind = alwaysUseTailwindCheckbox.checked;
+      const baseFontSize = parseBaseFontSize(baseFontSizeInput.value);
+      
+      if (extractedStyles.length === 0) {
+        generatedCSS = '/* No text styles found in this Figma file */\n/* Create some text styles in Figma and re-run the plugin */';
+        preview.innerHTML = applyCSSHighlighting(generatedCSS);
+        return;
+      }
+
+      let css = '/* Generated by Export Text Styles for TailwindCSS Plugin */\n';
+      css += '/* Ensure your fonts are imported. See tailwindcss.com/docs/font-family */\n\n';
+      css += '@import "tailwindcss";\n\n';
+      if (baseFontSize !== 16) {
+        css += `/* Font size mapping calculated for base font size: ${baseFontSize}px */\n`;
+      }
+      css += '\n';
+
+      // Generate @theme section only if toggle is on
+      if (includeTheme) {
+        const customFonts = new Set();
+        extractedStyles.forEach(style => {
+          if (!systemFonts[style.fontFamily]) {
+            customFonts.add(style.fontFamily);
+          }
+        });
+
+        const hasBaseFontOverride = baseFontSize !== 16;
+        const hasCustomFonts = customFonts.size > 0;
+        
+        if (hasBaseFontOverride || hasCustomFonts) {
+          css += '@theme {\n';
+          
+          // Add base font size override if different from 16px
+          if (hasBaseFontOverride) {
+            const baseRem = baseFontSize / 16;
+            css += `  /* Override default text-base to match your ${baseFontSize}px base font size */\n`;
+            css += `  --text-base: ${baseRem}rem; /* ${baseFontSize}px */\n`;
+            if (hasCustomFonts) {
+              css += '\n';
+            }
+          }
+          
+          // Add custom fonts
+          if (hasCustomFonts) {
+            customFonts.forEach(fontFamily => {
+              const varName = fontFamilyToVariable(fontFamily);
+              css += `  --font-${varName}: "${fontFamily}", sans-serif;\n`;
+            });
+          }
+          
+          css += '}\n\n';
+        }
+      }
+
+      // Generate @layer utilities section
+      css += '@layer utilities {\n';
+      
+      extractedStyles.forEach(style => {
+        const className = styleNameToClassName(style.name);
+        const mappedProperties = mapStyleToTailwind(style, !alwaysUseTailwind); // Invert logic
+        
+        css += `  .font-${className} {\n`;
+        css += `    @apply ${mappedProperties.classes.join(' ')};`;
+        
+        if (mappedProperties.customCSS.length > 0) {
+          css += '\n';
+          mappedProperties.customCSS.forEach(prop => {
+            css += `    ${prop};\n`;
+          });
+        } else {
+          css += '\n';
+        }
+        
+        css += '  }\n\n';
+      });
+      
+      css += '}';
+
+      generatedCSS = css;
+      preview.innerHTML = applyCSSHighlighting(css);
+    }
+
+    function applyCSSHighlighting(css) {
+      return css
+        .replace(/\/\*.*?\*\//g, function(match) {
+          return '<span class="css-comment">' + match + '</span>';
+        })
+        .replace(/(@theme|@layer utilities)/g, '<span class="css-at-rule">$1</span>')
+        .replace(/(\.[a-zA-Z0-9_-]+)/g, '<span class="css-selector">$1</span>')
+        .replace(/(\{|\})/g, '<span class="css-brace">$1</span>')
+        .replace(/(font-[a-zA-Z0-9_-]+|text-[a-zA-Z0-9_-]+|leading-[a-zA-Z0-9_-]+|tracking-[a-zA-Z0-9_-]+|[a-z-]+):/g, '<span class="css-property">$1</span>:')
+        .replace(/:\s*([^;]+);/g, ': <span class="css-value">$1</span>;')
+        .replace(/@apply\s+([^;]+);/g, '@apply <span class="css-value">$1</span>;');
+    }
+
+    function mapStyleToTailwind(style, fallbackToRaw) {
+      const classes = [];
+      const customCSS = [];
+
+      // Font Family
+      const fontFamilyClass = mapFontFamily(style.fontFamily);
+      if (fontFamilyClass) {
+        classes.push(fontFamilyClass);
+      }
+
+      // Font Size
+      const fontSizeClass = mapFontSize(style.fontSize, fallbackToRaw);
+      if (fontSizeClass.startsWith('text-')) {
+        classes.push(fontSizeClass);
+      } else {
+        customCSS.push(fontSizeClass);
+      }
+
+      // Font Weight
+      const fontWeightClass = mapFontWeight(style.fontWeight, style.fontStyle, fallbackToRaw);
+      if (fontWeightClass.startsWith('font-')) {
+        classes.push(fontWeightClass);
+      } else {
+        customCSS.push(fontWeightClass);
+      }
+
+      // Font Style (Italic)
+      if (style.fontStyle && style.fontStyle.toLowerCase().includes('italic')) {
+        classes.push('italic');
+      }
+
+      // Line Height
+      const lineHeightClass = mapLineHeight(style.lineHeight, style.fontSize, fallbackToRaw);
+      if (lineHeightClass && lineHeightClass.startsWith('leading-')) {
+        classes.push(lineHeightClass);
+      } else if (lineHeightClass) {
+        customCSS.push(lineHeightClass);
+      }
+
+      // Letter Spacing
+      const letterSpacingClass = mapLetterSpacing(style.letterSpacing, style.fontSize, fallbackToRaw);
+      if (letterSpacingClass && letterSpacingClass.startsWith('tracking-')) {
+        classes.push(letterSpacingClass);
+      } else if (letterSpacingClass) {
+        customCSS.push(letterSpacingClass);
+      }
+
+      // Text Transform
+      const textTransformClass = mapTextCase(style.textCase);
+      if (textTransformClass) {
+        classes.push(textTransformClass);
+      }
+
+      // Text Decoration
+      const textDecorationClass = mapTextDecoration(style.textDecoration);
+      if (textDecorationClass) {
+        classes.push(textDecorationClass);
+      }
+
+      // Paragraph Spacing
+      const paragraphSpacingClass = mapParagraphSpacing(style.paragraphSpacing, fallbackToRaw);
+      if (paragraphSpacingClass && paragraphSpacingClass.startsWith('mb-')) {
+        classes.push(paragraphSpacingClass);
+      } else if (paragraphSpacingClass) {
+        customCSS.push(paragraphSpacingClass);
+      }
+
+      return { classes, customCSS };
+    }
+
+    function mapFontFamily(fontFamily) {
+      if (systemFonts[fontFamily]) {
+        return systemFonts[fontFamily];
+      }
+      const varName = fontFamilyToVariable(fontFamily);
+      return `font-${varName}`;
+    }
+
+    function mapFontSize(fontSize, fallbackToRaw) {
+      const baseFontSize = parseBaseFontSize(baseFontSizeInput.value);
+      
+      // Calculate actual pixel values based on custom base font size
+      const actualTailwindSizes = tailwindFontSizes.map(size => ({
+        ...size,
+        actualPx: (size.px / 16) * baseFontSize // Convert rem to actual px
+      }));
+      
+      const closest = actualTailwindSizes.reduce((prev, curr) =>
+        Math.abs(curr.actualPx - fontSize) < Math.abs(prev.actualPx - fontSize) ? curr : prev
+      );
+      
+      if (Math.abs(closest.actualPx - fontSize) <= 1) {
+        return closest.class;
+      }
+      
+      return fallbackToRaw ? `font-size: ${fontSize}px` : closest.class;
+    }
+
+    function mapFontWeight(fontWeight, fontStyle, fallbackToRaw) {
+      let weight = fontWeight;
+      
+      // If fontWeight is not a number, try to parse from fontStyle
+      if (typeof fontWeight !== 'number') {
+        weight = parseWeightFromStyle(fontStyle) || 400;
+      }
+      
+      const closest = tailwindFontWeights.reduce((prev, curr) =>
+        Math.abs(curr.weight - weight) < Math.abs(prev.weight - weight) ? curr : prev
+      );
+      
+      if (Math.abs(closest.weight - weight) <= 50) {
+        return closest.class;
+      }
+      
+      return fallbackToRaw ? `font-weight: ${weight}` : closest.class;
+    }
+
+    function mapLineHeight(lineHeight, fontSize, fallbackToRaw) {
+      if (!lineHeight || lineHeight.unit === 'AUTO') {
+        return null;
+      }
+      
+      let lineHeightPx;
+      if (lineHeight.unit === 'PIXELS') {
+        lineHeightPx = lineHeight.value;
+      } else if (lineHeight.unit === 'PERCENT') {
+        lineHeightPx = (lineHeight.value / 100) * fontSize;
+      } else {
+        return null;
+      }
+      
+      const baseFontSize = parseBaseFontSize(baseFontSizeInput.value);
+      
+      // Step 1: Try spacing-based system first (±2px tolerance)
+      // Calculate actual pixel values based on custom base font size
+      const actualSpacingSizes = spacingLineHeights
+        .filter(item => item.px)
+        .map(item => ({
+          ...item,
+          actualPx: (item.px / 16) * baseFontSize // Convert rem to actual px
+        }));
+      
+      const spacingMatch = actualSpacingSizes.find(item => 
+        Math.abs(item.actualPx - lineHeightPx) <= 2
+      );
+      
+      if (spacingMatch) {
+        return spacingMatch.class;
+      }
+      
+      // Step 2: Try ratio-based system (±0.05 tolerance)
+      const ratio = lineHeightPx / fontSize;
+      const ratioMatch = tailwindLineHeights.find(item =>
+        Math.abs(item.ratio - ratio) <= 0.05
+      );
+      
+      if (ratioMatch) {
+        return ratioMatch.class;
+      }
+      
+      // Step 3: Fallback behavior
+      if (fallbackToRaw) {
+        return `line-height: ${ratio.toFixed(3)}`;
+      } else {
+        // Find closest spacing-based or ratio-based match
+        const closestSpacing = actualSpacingSizes.reduce((prev, curr) =>
+          Math.abs(curr.actualPx - lineHeightPx) < Math.abs(prev.actualPx - lineHeightPx) ? curr : prev
+        );
+        
+        const closestRatio = tailwindLineHeights.reduce((prev, curr) =>
+          Math.abs(curr.ratio - ratio) < Math.abs(prev.ratio - ratio) ? curr : prev
+        );
+        
+        // Choose the better match
+        const spacingDiff = Math.abs(closestSpacing.actualPx - lineHeightPx);
+        const ratioDiff = Math.abs(closestRatio.ratio - ratio) * fontSize; // Convert to px for comparison
+        
+        return spacingDiff <= ratioDiff ? closestSpacing.class : closestRatio.class;
+      }
+    }
+
+    function mapLetterSpacing(letterSpacing, fontSize, fallbackToRaw) {
+      if (!letterSpacing || letterSpacing.value === 0) {
+        return null;
+      }
+      
+      let em;
+      if (letterSpacing.unit === 'PIXELS') {
+        em = letterSpacing.value / fontSize;
+      } else if (letterSpacing.unit === 'PERCENT') {
+        em = (letterSpacing.value / 100) * fontSize / fontSize; // Convert to em
+      } else {
+        return null;
+      }
+      
+      const closest = tailwindLetterSpacing.reduce((prev, curr) =>
+        Math.abs(curr.em - em) < Math.abs(prev.em - em) ? curr : prev
+      );
+      
+      if (Math.abs(closest.em - em) <= 0.005) {
+        return closest.class;
+      }
+      
+      return fallbackToRaw ? `letter-spacing: ${em.toFixed(4)}em` : closest.class;
+    }
+
+    function mapTextCase(textCase) {
+      switch (textCase) {
+        case 'UPPER': return 'uppercase';
+        case 'LOWER': return 'lowercase';
+        case 'TITLE': return 'capitalize';
+        case 'SMALL_CAPS': return null; // No direct Tailwind utility
+        default: return null;
+      }
+    }
+
+    function mapTextDecoration(textDecoration) {
+      switch (textDecoration) {
+        case 'UNDERLINE': return 'underline';
+        case 'STRIKETHROUGH': return 'line-through';
+        default: return null;
+      }
+    }
+
+    function mapParagraphSpacing(paragraphSpacing, fallbackToRaw) {
+      if (!paragraphSpacing || paragraphSpacing === 0) {
+        return null;
+      }
+      
+      // Map to margin-bottom utilities (simplified - could be more sophisticated)
+      const spacingMap = [
+        { class: 'mb-1', px: 4 },
+        { class: 'mb-2', px: 8 },
+        { class: 'mb-3', px: 12 },
+        { class: 'mb-4', px: 16 },
+        { class: 'mb-5', px: 20 },
+        { class: 'mb-6', px: 24 },
+        { class: 'mb-8', px: 32 },
+        { class: 'mb-10', px: 40 },
+        { class: 'mb-12', px: 48 },
+        { class: 'mb-16', px: 64 },
+      ];
+      
+      const closest = spacingMap.reduce((prev, curr) =>
+        Math.abs(curr.px - paragraphSpacing) < Math.abs(prev.px - paragraphSpacing) ? curr : prev
+      );
+      
+      if (Math.abs(closest.px - paragraphSpacing) <= 2) {
+        return closest.class;
+      }
+      
+      return fallbackToRaw ? `margin-bottom: ${paragraphSpacing}px` : closest.class;
+    }
+
+    function parseWeightFromStyle(fontStyle) {
+      if (!fontStyle) return null;
+      
+      for (const [name, weight] of Object.entries(styleNameToWeight)) {
+        if (fontStyle.includes(name)) {
+          return weight;
+        }
+      }
+      return null;
+    }
+
+    function fontFamilyToVariable(fontFamily) {
+      return fontFamily
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+    }
+
+    function styleNameToClassName(styleName) {
+      return styleName
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+    }
+
+    function regenerateCSS() {
+      if (extractedStyles.length > 0) {
+        generateCSS();
+      }
+    }
+
+    async function copyToClipboard() {
+      try {
+        // Copy the raw CSS, not the HTML-highlighted version
+        await navigator.clipboard.writeText(generatedCSS);
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy to Clipboard';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = generatedCSS;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy to Clipboard';
+        }, 2000);
+      }
+    }
+
+    function saveFile() {
+      const blob = new Blob([generatedCSS], { type: 'text/css' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'globals.css';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

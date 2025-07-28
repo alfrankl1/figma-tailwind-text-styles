@@ -1,0 +1,12 @@
+{
+  "name": "Export Text Styles for TailwindCSS v4", 
+  "id": "1531407977615884339",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}
